@@ -1,49 +1,49 @@
+import net from 'net';
 import http from 'http';
-import React from 'react';
-import ReactDOMServer from 'react-dom/server';
 
+import serveStatic from 'serve-static';
 import Loader from '../Components/Loader';
 
-let DOM = React.DOM;
+const HOST = '0.0.0.0';
+const PORT = 8080;
 
 class Server {
-  run(cb) {
-    this.createServer().listen(8080, cb);
+  constructor() {
+    this.socket = null;
+    this.request = null;
+    this.response = null;
+    this.checkPort();
+  }
+
+  run() {
+    return this.createServer().listen(PORT);
+  }
+
+  checkPort(port) {
+    let server = net.createServer()
+      .once('listening', () => server.close())
+      .listen(PORT);
   }
 
   createServer() {
-    return http.createServer((req, res) => {
-      if (req.url === '/') {
-        res.setHeader('Content-Type', 'text/html');
-
-        let props = {
-          items: [
-            'Item 0',
-            'Item 1',
-            'Item </script>',
-            'Item <!--inject!-->',
-          ]
-        };
-
-        let html = ReactDOMServer.renderToStaticMarkup(
-          DOM.body(null,
-            DOM.div({ id: '__atellier' }),
-            DOM.script({ src: '//fb.me/react-0.14.7.min.js' }),
-            DOM.script({ src: '//fb.me/react-dom-0.14.7.min.js' }),
-            DOM.script({ src: '/react-atellier/dist/react-atellier.min.js' })
-          )
-        );
-
-        res.end(html);
-      } else {
-        res.statusCode = 404;
-        res.end();
-      }
+    this.socket = http.createServer((request, response) => {
+      this.request = request;
+      this.response = response;
+      this.response.end('OK');
     });
+
+    this.socket.on('error', (e) => {
+      console.error(e.message);
+      process.exit(1);
+    });
+
+    return this.socket;
   }
 
-  listen(port, cb) {
-    return http.listen(port, cb);
+  listen(port) {
+    this.socket.listen({ host: HOST, port: PORT, exclusive: true }, () => {
+      console.log('HTTP::listen::OK', arguments);
+    });
   }
 }
 
