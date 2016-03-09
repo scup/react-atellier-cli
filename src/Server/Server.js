@@ -1,35 +1,67 @@
-import net from 'net';
+import fs from 'fs';
 import http from 'http';
-
 import serveStatic from 'serve-static';
-import Loader from '../Components/Loader';
+import React from 'react';
+import ReactDOMServer from 'react-dom/server';
+// import ReactAtellier from 'react-atellier';
 
-const HOST = '0.0.0.0';
+const HOST = '127.0.0.1';
 const PORT = 8080;
+const ROOT_DIR = process.cwd();
+const COMPONENTS_DIR = ROOT_DIR + '/components';
+const DOM = React.DOM;
+// const AtellierUI = React.createFactory(require('./Components/AtellierUI'));
 
 class Server {
   constructor() {
     this.socket = null;
     this.request = null;
     this.response = null;
-    this.checkPort();
+    this.components = null;
+    this.loadComponents();
   }
 
-  run() {
-    return this.createServer().listen(PORT);
+  run(callback) {
+    return this.createServer().listen(PORT, callback);
   }
 
-  checkPort(port) {
-    let server = net.createServer()
-      .once('listening', () => server.close())
-      .listen(PORT);
+  loadComponents() {
+    fs.readdir(COMPONENTS_DIR, (err, components) => {
+      this.components = components;
+    });
   }
 
   createServer() {
     this.socket = http.createServer((request, response) => {
       this.request = request;
       this.response = response;
-      this.response.end('OK');
+
+      serveStatic(ROOT_DIR, { index: false })(this.request, this.response, () => {
+        console.log('REQUEST OK');
+
+        let props = {
+          components: this.components
+        };
+
+        let html = ReactDOMServer.renderToStaticMarkup(
+          DOM.body(null,
+            DOM.div({ id: '__atellier', dangerouslySetInnerHTML: { __html: ReactDOMServer.renderToString(ReactAtellier(React)(props)) } }),
+            DOM.script({ src: '//fb.me/react-0.14.7.min.js' }),
+            DOM.script({ src: '//fb.me/react-dom-0.14.7.min.js' }),
+            DOM.script({ src: '/react-atellier/dist/react-atellier.min.js' }),
+            DOM.script({ dangerouslySetInnerHTML: {
+              __html: `/* jshint undef:false */
+                  ReactDOM.render(React.createElement(ReactAtellier(React), {
+                    components: data
+                  }), document.getElementById('main'));`
+              }
+            })
+          )
+        );
+
+        this.response.end(html);
+        html = null;
+      });
     });
 
     this.socket.on('error', (e) => {
@@ -40,10 +72,8 @@ class Server {
     return this.socket;
   }
 
-  listen(port) {
-    this.socket.listen({ host: HOST, port: PORT, exclusive: true }, () => {
-      console.log('HTTP::listen::OK', arguments);
-    });
+  listen(port, callback) {
+    this.socket.listen({ host: HOST, port: PORT, exclusive: true }, callback);
   }
 }
 

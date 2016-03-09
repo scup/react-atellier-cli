@@ -1,14 +1,10 @@
-class App {
-  constructor(config) {
-    this.id = (Date.now()).toString(36);
-    console.log(config);
+import React from 'react';
 
-    Loader.loadDir(config.componentsDir, (err, components) => {
-      this.components = components;
-      console.log(this.components);
-    });
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    console.log(props);
   }
-
 }
 
 export default App;
