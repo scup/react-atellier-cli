@@ -20,16 +20,10 @@ function _send(filename) {
 }
 
 function _resolve(filepath) {
-  console.log('filepath', filepath);
-  let _path = path.resolve(path.join(NODE_MODULES_DIR, filepath));
-  console.log('_path', _path);
-  return _path;
+  return path.resolve(path.join(NODE_MODULES_DIR, filepath));
 }
 
 export default function (uri, filename) {
-  //
-  // TODO: Router
-  //
   if (/^\/(index\.html)?$/.test(uri)) {
     filename = path.resolve(path.join(__dirname, '../atellier.html'));
   } else if (/^\/react-atellier\.min\.js$/.test(uri)) {

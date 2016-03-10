@@ -13,5 +13,11 @@ program
   .parse(process.argv);
 
 new Server(program).run(function () {
-  console.log('Running');
+  let _figlet = '\x1b[36m%s\x1b[0m';
+  console.log(_figlet, '    _   _       _ _ _');
+  console.log(_figlet, '   / \\\ | |_ ___| | (_) ___ _ __');
+  console.log(_figlet, '  / _ \\\| __/ _ \\\ | | |/ _ \\\ \'__|');
+  console.log(_figlet, ' / ___ \\\ ||  __/ | | |  __/ |');
+  console.log(_figlet, '/_/   \\\_\\\__\\\___|_|_|_|\\\___|_|');
+  console.log();
 });

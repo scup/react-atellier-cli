@@ -3,12 +3,11 @@ import path from 'path';
 import url from 'url';
 import http from 'http';
 import webpack from 'webpack';
+import chokidar from 'chokidar';
 import _sendFile from './lib/send-file';
 
 class Server {
   constructor({componentsDir, hostname, port, rootDir}) {
-    console.log(componentsDir, hostname, port, rootDir);
-
     this.host = hostname;
     this.port = port;
     this.componentsDir = componentsDir;
@@ -16,6 +15,7 @@ class Server {
     this.socket = null;
     this.components = null;
     this.loadComponents();
+    this.watchComponents();
   }
 
   run(callback) {
@@ -26,6 +26,13 @@ class Server {
     fs.readdir(this.componentsDir, (err, components) => {
       this.components = components;
     });
+  }
+
+  watchComponents() {
+    chokidar.watch(`${this.componentsDir}/**/*`)
+      .on('all', (event, path) => {
+        console.log(event, path);
+      });
   }
 
   createServer() {
