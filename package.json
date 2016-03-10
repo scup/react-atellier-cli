@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "description": "Attelier Command Line",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scup/atellier-cli.git"
+  },
   "keywords": [
     "react",
     "reactjs",
@@ -16,7 +20,9 @@
     "command"
   ],
   "main": "index.js",
-  "bin": "index.js",
+  "bin": {
+    "atellier": "./index.js"
+  },
   "directories": {
     "test": "test"
   },
