@@ -61,7 +61,7 @@ class Server {
           'dist',
           'react-atellier.min.js.map'
         ));
-      } else if (/^\/(react\.js)?$/.test(uri)) {
+      } else if (/^\/react\.js$/.test(uri)) {
         filename = path.resolve(path.join(
           __dirname,
           '..',
@@ -71,7 +71,7 @@ class Server {
           'dist',
           'react.js'
         ));
-      } else if (/^\/(react-dom\.js)?$/.test(uri)) {
+      } else if (/^\/react-dom\.js$/.test(uri)) {
         filename = path.resolve(path.join(
           __dirname,
           '..',
@@ -80,6 +80,26 @@ class Server {
           'react-dom',
           'dist',
           'react-dom.js'
+        ));
+      } else if (/^\/react-dom\.js$/.test(uri)) {
+        filename = path.resolve(path.join(
+          __dirname,
+          '..',
+          '..',
+          'node_modules',
+          'react-dom',
+          'dist',
+          'react-dom.js'
+        ));
+      } else if (/^\/react-inlinesvg\.js$/.test(uri)) {
+        filename = path.resolve(path.join(
+          __dirname,
+          '..',
+          '..',
+          'node_modules',
+          'react-inlinesvg',
+          'lib',
+          'index.js'
         ));
       }
 
