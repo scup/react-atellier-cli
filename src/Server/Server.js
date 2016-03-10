@@ -1,22 +1,25 @@
 import fs from 'fs';
-import http from 'http';
-import serveStatic from 'serve-static';
-import React from 'react';
-import ReactDOMServer from 'react-dom/server';
-// import ReactAtellier from 'react-atellier';
+import path from 'path';
+import url from 'url';
 
-const HOST = '127.0.0.1';
+import http from 'http';
+
+// import React from 'react';
+// import ReactDOMServer from 'react-dom/server';
+
+import _sendFile from './lib/send-file';
+
+// const DOM = React.DOM;
+// const AtellierUI = React.createFactory(require('./Components/AtellierUI'));
+
+const HOST = '0.0.0.0';
 const PORT = 8080;
 const ROOT_DIR = process.cwd();
 const COMPONENTS_DIR = ROOT_DIR + '/components';
-const DOM = React.DOM;
-// const AtellierUI = React.createFactory(require('./Components/AtellierUI'));
 
 class Server {
   constructor() {
     this.socket = null;
-    this.request = null;
-    this.response = null;
     this.components = null;
     this.loadComponents();
   }
@@ -33,35 +36,54 @@ class Server {
 
   createServer() {
     this.socket = http.createServer((request, response) => {
-      this.request = request;
-      this.response = response;
+      let uri = url.parse(request.url).pathname;
+      let filename = path.join(process.cwd(), uri);
 
-      serveStatic(ROOT_DIR, { index: false })(this.request, this.response, () => {
-        console.log('REQUEST OK');
+      if (/^\/(index\.html)?$/.test(uri)) {
+        filename = path.join(__dirname, 'atellier.html');
+      } else if (/^\/(react-atellier\.min\.js)?$/.test(uri)) {
+        filename = path.resolve(path.join(
+          __dirname,
+          '..',
+          '..',
+          'node_modules',
+          'react-atellier',
+          'dist',
+          'react-atellier.min.js'
+        ));
+      }  else if (/^\/(react-atellier\.min\.js\.map)?$/.test(uri)) {
+        filename = path.resolve(path.join(
+          __dirname,
+          '..',
+          '..',
+          'node_modules',
+          'react-atellier',
+          'dist',
+          'react-atellier.min.js.map'
+        ));
+      } else if (/^\/(react\.js)?$/.test(uri)) {
+        filename = path.resolve(path.join(
+          __dirname,
+          '..',
+          '..',
+          'node_modules',
+          'react',
+          'dist',
+          'react.js'
+        ));
+      } else if (/^\/(react-dom\.js)?$/.test(uri)) {
+        filename = path.resolve(path.join(
+          __dirname,
+          '..',
+          '..',
+          'node_modules',
+          'react-dom',
+          'dist',
+          'react-dom.js'
+        ));
+      }
 
-        let props = {
-          components: this.components
-        };
-
-        let html = ReactDOMServer.renderToStaticMarkup(
-          DOM.body(null,
-            DOM.div({ id: '__atellier', dangerouslySetInnerHTML: { __html: ReactDOMServer.renderToString(ReactAtellier(React)(props)) } }),
-            DOM.script({ src: '//fb.me/react-0.14.7.min.js' }),
-            DOM.script({ src: '//fb.me/react-dom-0.14.7.min.js' }),
-            DOM.script({ src: '/react-atellier/dist/react-atellier.min.js' }),
-            DOM.script({ dangerouslySetInnerHTML: {
-              __html: `/* jshint undef:false */
-                  ReactDOM.render(React.createElement(ReactAtellier(React), {
-                    components: data
-                  }), document.getElementById('main'));`
-              }
-            })
-          )
-        );
-
-        this.response.end(html);
-        html = null;
-      });
+      _sendFile.call(response, filename);
     });
 
     this.socket.on('error', (e) => {
