@@ -1,35 +1,29 @@
 import fs from 'fs';
 import path from 'path';
 import url from 'url';
-
 import http from 'http';
-
-// import React from 'react';
-// import ReactDOMServer from 'react-dom/server';
-
+import webpack from 'webpack';
 import _sendFile from './lib/send-file';
 
-// const DOM = React.DOM;
-// const AtellierUI = React.createFactory(require('./Components/AtellierUI'));
-
-const HOST = '0.0.0.0';
-const PORT = 8080;
-const ROOT_DIR = process.cwd();
-const COMPONENTS_DIR = ROOT_DIR + '/components';
-
 class Server {
-  constructor() {
+  constructor({componentsDir, hostname, port, rootDir}) {
+    console.log(componentsDir, hostname, port, rootDir);
+
+    this.host = hostname;
+    this.port = port;
+    this.componentsDir = componentsDir;
+
     this.socket = null;
     this.components = null;
     this.loadComponents();
   }
 
   run(callback) {
-    return this.createServer().listen(PORT, callback);
+    return this.createServer().listen(this.port, callback);
   }
 
   loadComponents() {
-    fs.readdir(COMPONENTS_DIR, (err, components) => {
+    fs.readdir(this.componentsDir, (err, components) => {
       this.components = components;
     });
   }
@@ -38,72 +32,7 @@ class Server {
     this.socket = http.createServer((request, response) => {
       let uri = url.parse(request.url).pathname;
       let filename = path.join(process.cwd(), uri);
-
-      if (/^\/(index\.html)?$/.test(uri)) {
-        filename = path.join(__dirname, 'atellier.html');
-      } else if (/^\/(react-atellier\.min\.js)?$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react-atellier',
-          'dist',
-          'react-atellier.min.js'
-        ));
-      }  else if (/^\/(react-atellier\.min\.js\.map)?$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react-atellier',
-          'dist',
-          'react-atellier.min.js.map'
-        ));
-      } else if (/^\/react\.js$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react',
-          'dist',
-          'react.js'
-        ));
-      } else if (/^\/react-dom\.js$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react-dom',
-          'dist',
-          'react-dom.js'
-        ));
-      } else if (/^\/react-dom\.js$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react-dom',
-          'dist',
-          'react-dom.js'
-        ));
-      } else if (/^\/react-inlinesvg\.js$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react-inlinesvg',
-          'lib',
-          'index.js'
-        ));
-      }
-
-      _sendFile.call(response, filename);
+      _sendFile.call(response, uri, filename);
     });
 
     this.socket.on('error', (e) => {
@@ -115,7 +44,7 @@ class Server {
   }
 
   listen(port, callback) {
-    this.socket.listen({ host: HOST, port: PORT, exclusive: true }, callback);
+    this.socket.listen({ host: this.host, port: this.port, exclusive: true }, callback);
   }
 }
 

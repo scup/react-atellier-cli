@@ -6,14 +6,28 @@
 </head>
 <body>
   <div id="__atellier"></div>
-
   <script src="/react.js"></script>
   <script src="/react-dom.js"></script>
   <script src="/react-atellier.min.js"></script>
-
+  <script src="/components.js"></script>
   <script>
+    var components = [];
+
+    // component = eval("React.createClass({\
+    //   propTypes : {\
+    //     text : function(){}\
+    //   },\
+    //   render : function(){\
+    //     return React.createElement('h1',{},'Hello World'+this.props.text)\
+    //   }\
+    // })");
+    // components.push({
+    //   componentName : 'Teste',
+    //   component : component
+    // })
+
     ReactDOM.render(React.createElement(ReactAtellier(React), {
-      components: []
+      components: components
     }), document.getElementById('__atellier'));
   </script>
 </body>
