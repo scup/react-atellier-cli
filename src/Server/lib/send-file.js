@@ -23,7 +23,13 @@ function _resolve(filepath) {
   return path.resolve(path.join(NODE_MODULES_DIR, filepath));
 }
 
-export default function (uri, filename) {
+export let requestHandler = (request, response) => {
+  let uri = url.parse(request.url).pathname;
+  let filename = path.join(process.cwd(), uri);
+  sendFile.call(response, uri, filename);
+};
+
+export let sendFile = function (uri, filename) {
   if (/^\/(index\.html)?$/.test(uri)) {
     filename = path.resolve(path.join(__dirname, '../atellier.html'));
   } else if (/^\/react-atellier\.min\.js$/.test(uri)) {

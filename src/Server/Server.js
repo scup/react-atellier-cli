@@ -3,55 +3,42 @@ import path from 'path';
 import url from 'url';
 import http from 'http';
 import webpack from 'webpack';
-import chokidar from 'chokidar';
-import _sendFile from './lib/send-file';
+import webpackDevServer from 'webpack-dev-server';
 
 class Server {
-  constructor({componentsDir, hostname, port, rootDir}) {
-    this.host = hostname;
-    this.port = port;
-    this.componentsDir = componentsDir;
-
+  constructor(config) {
+    this.componentsDir = config.componentsDir;
+    this.host = config.hostname;
+    this.port = config.port;
+    this.rootDir = config.rootDir;
     this.socket = null;
     this.components = null;
-    this.loadComponents();
-    this.watchComponents();
   }
 
-  run(callback) {
-    return this.createServer().listen(this.port, callback);
-  }
-
-  loadComponents() {
-    fs.readdir(this.componentsDir, (err, components) => {
-      this.components = components;
-    });
-  }
-
-  watchComponents() {
-    chokidar.watch(`${this.componentsDir}/**/*`)
-      .on('all', (event, path) => {
-        console.log(event, path);
-      });
+  run() {
+    return this.createServer().listen(this.port);
   }
 
   createServer() {
-    this.socket = http.createServer((request, response) => {
-      let uri = url.parse(request.url).pathname;
-      let filename = path.join(process.cwd(), uri);
-      _sendFile.call(response, uri, filename);
-    });
+    let rootDir = process.cwd();
+    let config = require(path.resolve(rootDir + '/webpack.config.js'));
 
-    this.socket.on('error', (e) => {
-      console.error(e.message);
-      process.exit(1);
-    });
+    config.entry = rootDir + '/index.js';
+    config.output = {
+      path: rootDir,
+      filename: rootDir + '/dist/bundle.js',
+      sourceFilename: '[file].map'
+    };
+
+    let compiler = webpack(config);
+
+    this.socket = new webpackDevServer(compiler, { hot: true });
 
     return this.socket;
   }
 
   listen(port, callback) {
-    this.socket.listen({ host: this.host, port: this.port, exclusive: true }, callback);
+    this.socket.listen({ host: this.host, port: this.port, exclusive: true });
   }
 }
 
