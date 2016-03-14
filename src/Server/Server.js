@@ -13,32 +13,25 @@ class Server {
     this.rootDir = config.rootDir;
     this.socket = null;
     this.components = null;
+    this.entry = null;
   }
 
-  run() {
-    return this.createServer().listen(this.port);
+  run(callback) {
+    return this.createServer().listen(this.port, this.host, callback);
   }
 
   createServer() {
-    let rootDir = process.cwd();
-    let config = require(path.resolve(rootDir + '/webpack.config.js'));
-
-    config.entry = rootDir + '/index.js';
-    config.output = {
-      path: rootDir,
-      filename: rootDir + '/dist/bundle.js',
-      sourceFilename: '[file].map'
-    };
-
+    let config = require(path.resolve(this.rootDir + '/webpack.config.js'));
     let compiler = webpack(config);
 
-    this.socket = new webpackDevServer(compiler, { hot: true });
+    this.socket = new webpackDevServer(compiler, {
+      publicPath: config.rootDir,
+      stats: { colors: true },
+      contentBase: path.resolve(__dirname + '/../..'),
+      hot: true
+    });
 
     return this.socket;
-  }
-
-  listen(port, callback) {
-    this.socket.listen({ host: this.host, port: this.port, exclusive: true });
   }
 }
 

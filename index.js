@@ -13,7 +13,6 @@ program
   .parse(process.argv);
 
 new Server(program).run();
-
 let _figlet = '\x1b[36m%s\x1b[0m';
 console.log(_figlet, '    _   _       _ _ _');
 console.log(_figlet, '   / \\\ | |_ ___| | (_) ___ _ __');
