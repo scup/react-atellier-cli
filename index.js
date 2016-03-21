@@ -4,8 +4,10 @@
 import pkg from './package';
 import program from 'commander';
 
+import React from 'react';
+import App from './src/App/App';
 import Server from './src/Server/Server';
-import AtellierUI from './src/Server/Components/AtellierUI';
+import Router from './src/Router/Router';
 
 program
   .version(pkg.version)
@@ -15,10 +17,8 @@ program
   .option('-r, --rootDir <root_dir>', 'components directory. defaults to' + process.cwd(), process.cwd())
   .parse(process.argv);
 
-let server = new Server()
-server.run(function () {
-  console.log('Running');
-});
+let server = new Server();
+let router = new Router(<App/>);
 
-
-// let page = new AtellierUI();
+server.use(router.reactMiddleware());
+server.run();

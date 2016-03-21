@@ -1,16 +1,15 @@
-import fs from 'fs';
 import path from 'path';
-import url from 'url';
 
-import http from 'http';
+import bodyParser from 'body-parser';
+import compression from 'compression';
+import errorhandler from 'errorhandler';
+import express from 'express';
+import favicon from 'serve-favicon';
+import logger from 'morgan';
+import serveStatic from 'serve-static';
+import { Compiler } from 'express-compile';
+import livereload from 'livereload';
 
-// import React from 'react';
-// import ReactDOMServer from 'react-dom/server';
-
-import _sendFile from './lib/send-file';
-
-// const DOM = React.DOM;
-// const AtellierUI = React.createFactory(require('./Components/AtellierUI'));
 
 const HOST = '0.0.0.0';
 const PORT = 8080;
@@ -19,104 +18,40 @@ const COMPONENTS_DIR = ROOT_DIR + '/components';
 
 class Server {
   constructor() {
-    this.socket = null;
-    this.components = null;
-    this.loadComponents();
+    this.host = HOST;
+    this.port = PORT;
+    this.__app = express();
+
+    this.use = this.__app.use.bind(this.__app);
+
+    this.use(logger('dev'));
+    this.use(bodyParser.urlencoded({ extended: false }));
+    this.use(bodyParser.json());
+    this.use(compression());
+    this.use(favicon(path.resolve(__dirname, '../../static/icons/favicon.ico')));
+    this.use(serveStatic(path.resolve(__dirname, '../../static')));
+    this.use(serveStatic(COMPONENTS_DIR));
+    this.use(Compiler({
+      root: ROOT_DIR,
+      cwd: COMPONENTS_DIR,
+      paths: ['components/**/*'],
+      ignore: ['components/node_modules/**/*'],
+      ignoreStyleCache: true
+    }));
+    this.use(errorhandler());
   }
 
   run(callback) {
-    return this.createServer().listen(PORT, callback);
-  }
-
-  loadComponents() {
-    fs.readdir(COMPONENTS_DIR, (err, components) => {
-      this.components = components;
-    });
-  }
-
-  createServer() {
-    this.socket = http.createServer((request, response) => {
-      let uri = url.parse(request.url).pathname;
-      let filename = path.join(process.cwd(), uri);
-
-      if (/^\/(index\.html)?$/.test(uri)) {
-        filename = path.join(__dirname, 'atellier.html');
-      } else if (/^\/(react-atellier\.min\.js)?$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react-atellier',
-          'dist',
-          'react-atellier.min.js'
-        ));
-      }  else if (/^\/(react-atellier\.min\.js\.map)?$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react-atellier',
-          'dist',
-          'react-atellier.min.js.map'
-        ));
-      } else if (/^\/react\.js$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react',
-          'dist',
-          'react.js'
-        ));
-      } else if (/^\/react-dom\.js$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react-dom',
-          'dist',
-          'react-dom.js'
-        ));
-      } else if (/^\/react-dom\.js$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react-dom',
-          'dist',
-          'react-dom.js'
-        ));
-      } else if (/^\/react-inlinesvg\.js$/.test(uri)) {
-        filename = path.resolve(path.join(
-          __dirname,
-          '..',
-          '..',
-          'node_modules',
-          'react-inlinesvg',
-          'lib',
-          'index.js'
-        ));
-      }
-
-      _sendFile.call(response, filename);
+    this.__app.listen(this.port, this.host, () => {
+      console.log(`Attelier listening on http://${this.host}:${this.port}`);
+      callback && callback();
     });
 
-    this.socket.on('error', (e) => {
-      console.error(e.message);
-      process.exit(1);
-    });
-
-    return this.socket;
-  }
-
-  listen(port, callback) {
-    this.socket.listen({ host: HOST, port: PORT, exclusive: true }, callback);
+    this.__app = livereload.createServer({ applyJSLive: true, applyCSSLive: true, applyImgLive: true });
+    this.__app.watch(COMPONENTS_DIR);
   }
 }
+
+
 
 export default Server;
